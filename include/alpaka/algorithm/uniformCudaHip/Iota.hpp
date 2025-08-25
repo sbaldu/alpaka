@@ -11,6 +11,8 @@
 #include "alpaka/kernel/Traits.hpp"
 #include "alpaka/workdiv/WorkDivMembers.hpp"
 
+#include <cstdint>
+
 namespace alpaka
 {
 
@@ -23,13 +25,14 @@ namespace alpaka
     namespace detail
     {
 
-        template<typename TAcc, typename TElem, typename Idx, typename TPitchBytes>
-        ALPAKA_FN_ACC void IotaDeviceFN(TAcc const& acc, TElem* ptr, Idx idx, TElem init, TPitchBytes pitchBytes)
+        template<typename TAcc, typename TElem, typename TIdx, typename TPitchBytes>
+        ALPAKA_FN_ACC void IotaDeviceFN(TAcc const& acc, TElem* ptr, TIdx idx, TElem init, TPitchBytes pitchBytes)
         {
             std::uintptr_t offsetBytes = static_cast<std::uintptr_t>((pitchBytes * idx).sum());
             TElem* elem = reinterpret_cast<TElem*>(
                 __builtin_assume_aligned(reinterpret_cast<std::uint8_t*>(ptr) + offsetBytes, alignof(TElem)));
-            *elem = init + static_cast<TElem>(idx);
+            auto offset = static_cast<std::uintptr_t>(elem - ptr) / sizeof(TElem);
+            *elem = init + static_cast<TElem>(offset);
         }
 
         template<typename TElem, typename TExtent, typename TPitchBytes>
@@ -93,10 +96,11 @@ namespace alpaka
                     WorkDiv grid = WorkDiv(blocks, threads, elements);
                     return alpaka::createTaskKernel<Acc>(
                         grid,
-                        alpaka::detail::IotaKernelND<Elem, TExtent, decltype(getPitchesInBytes(view))>{
-                            std::forward<TViewFwd>(view),
-                            init,
-                            getPitchesInBytes(view)});
+                        alpaka::detail::IotaKernelND<Elem, TExtent, decltype(getPitchesInBytes(view))>{},
+                        std::data(view),
+                        init,
+                        extent,
+                        getPitchesInBytes(view));
                 }
             }
         };
