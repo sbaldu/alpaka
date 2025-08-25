@@ -16,11 +16,7 @@ namespace alpaka::meta
     {
         ALPAKA_NO_HOST_ACC_WARNING
         template<typename TIndex, typename TExtentVec, typename TFnObj>
-        ALPAKA_FN_HOST_ACC constexpr void ndLoopImpl(
-            std::index_sequence<>,
-            TIndex& idx,
-            TExtentVec const&,
-            TFnObj const& f)
+        ALPAKA_FN_HOST_ACC constexpr void ndLoopImpl(std::index_sequence<>, TIndex& idx, TExtentVec const&, TFnObj&& f)
         {
             f(idx);
         }
@@ -31,7 +27,7 @@ namespace alpaka::meta
             std::index_sequence<Tdim0, Tdims...>,
             TIndex& idx,
             TExtentVec const& extent,
-            TFnObj const& f)
+            TFnObj&& f)
         {
             static_assert(Dim<TIndex>::value > 0u, "The dimension given to ndLoop has to be larger than zero!");
             static_assert(
@@ -58,7 +54,7 @@ namespace alpaka::meta
     ALPAKA_FN_HOST_ACC auto ndLoop(
         [[maybe_unused]] std::index_sequence<Tdims...> indexSequence,
         TExtentVec const& extent,
-        TFnObj const& f) -> void
+        TFnObj&& f) -> void
     {
         static_assert(
             IntegerSequenceValuesInRange<std::index_sequence<Tdims...>, std::size_t, 0, Dim<TExtentVec>::value>::value,
@@ -78,7 +74,7 @@ namespace alpaka::meta
     //! \param f The function called at each iteration.
     ALPAKA_NO_HOST_ACC_WARNING
     template<typename TExtentVec, typename TFnObj>
-    ALPAKA_FN_HOST_ACC auto ndLoopIncIdx(TExtentVec const& extent, TFnObj const& f) -> void
+    ALPAKA_FN_HOST_ACC auto ndLoopIncIdx(TExtentVec const& extent, TFnObj&& f) -> void
     {
         ndLoop(std::make_index_sequence<Dim<TExtentVec>::value>(), extent, f);
     }
