@@ -118,6 +118,23 @@ namespace alpaka
         }
     };
 
+    //! The saturating increment function object.
+    struct AtomicSaturatingInc
+    {
+        //! Increments up to value, then stays at value upon further increments.
+        //!
+        //! \return The old value of addr.
+        ALPAKA_NO_HOST_ACC_WARNING
+        template<typename T>
+        ALPAKA_FN_HOST_ACC auto operator()(T* const addr, T const& value) const -> T
+        {
+            auto const old = *addr;
+            auto& ref = *addr;
+            ref = ((old >= value) ? value : old + static_cast<T>(1));
+            return old;
+        }
+    };
+
     //! The decrement function object.
     struct AtomicDec
     {
@@ -131,6 +148,23 @@ namespace alpaka
             auto const old = *addr;
             auto& ref = *addr;
             ref = (((old == static_cast<T>(0)) || (old > value)) ? value : static_cast<T>(old - static_cast<T>(1)));
+            return old;
+        }
+    };
+
+    //! The saturating decrement function object.
+    struct AtomicSaturatingDec
+    {
+        //! Decrement down to 0, then reset to value.
+        //!
+        //! \return The old value of addr.
+        ALPAKA_NO_HOST_ACC_WARNING
+        template<typename T>
+        ALPAKA_FN_HOST_ACC auto operator()(T* const addr) const -> T
+        {
+            auto const old = *addr;
+            auto& ref = *addr;
+            ref = ((old == static_cast<T>(0)) ? static_cast<T>(0) : static_cast<T>(old - static_cast<T>(1)));
             return old;
         }
     };
