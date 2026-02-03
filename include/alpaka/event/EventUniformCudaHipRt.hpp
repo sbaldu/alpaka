@@ -24,6 +24,13 @@ namespace alpaka
 {
     namespace uniform_cuda_hip::detail
     {
+        enum class eventState
+        {
+            created,
+            enqueued,
+            completed
+        };
+
         //! The CUDA/HIP RT device event implementation.
         template<typename TApi>
         class EventUniformCudaHipImpl final
@@ -32,6 +39,7 @@ namespace alpaka
             ALPAKA_FN_HOST EventUniformCudaHipImpl(DevUniformCudaHipRt<TApi> const& dev, bool bBusyWait)
                 : m_dev(dev)
                 , m_UniformCudaHipEvent()
+                , m_state(eventState::created)
             {
                 ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
@@ -47,9 +55,10 @@ namespace alpaka
                 // data.
                 //   Events created with this flag specified and the cuda/hip-EventBlockingSync flag not specified
                 //   will provide the best performance when used with cudaStreamWaitEvent() and cudaEventQuery().
-                ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(TApi::eventCreateWithFlags(
-                    &m_UniformCudaHipEvent,
-                    (bBusyWait ? TApi::eventDefault : TApi::eventBlockingSync) | TApi::eventDisableTiming));
+                ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(
+                    TApi::eventCreateWithFlags(
+                        &m_UniformCudaHipEvent,
+                        (bBusyWait ? TApi::eventDefault : TApi::eventBlockingSync) | TApi::eventDisableTiming));
             }
 
             EventUniformCudaHipImpl(EventUniformCudaHipImpl const&) = delete;
@@ -73,6 +82,7 @@ namespace alpaka
 
         public:
             DevUniformCudaHipRt<TApi> const m_dev; //!< The device this event is bound to.
+            eventState m_state;
 
         private:
             typename TApi::Event_t m_UniformCudaHipEvent;
@@ -138,6 +148,9 @@ namespace alpaka
             {
                 ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
+                if(event.m_spEventImpl->m_state == uniform_cuda_hip::detail::eventState::completed)
+                    return true;
+
                 // Query is allowed even for events on non current device.
                 typename TApi::Error_t ret = TApi::success;
                 ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK_IGNORE(
@@ -158,6 +171,7 @@ namespace alpaka
                 ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
                 ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(TApi::eventRecord(event.getNativeHandle(), queue.getNativeHandle()));
+                event.m_spEventImpl->m_state = uniform_cuda_hip::detail::eventState::enqueued;
             }
         };
 
@@ -172,6 +186,7 @@ namespace alpaka
                 ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
                 ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(TApi::eventRecord(event.getNativeHandle(), queue.getNativeHandle()));
+                event.m_spEventImpl->m_state = uniform_cuda_hip::detail::eventState::enqueued;
             }
         };
 
