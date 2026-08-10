@@ -250,6 +250,7 @@ namespace alpaka
             using type = alpaka::AccCpuOmp2Threads<TDim, TIdx>;
         };
     } // namespace trait
+
 } // namespace alpaka
 
 #endif

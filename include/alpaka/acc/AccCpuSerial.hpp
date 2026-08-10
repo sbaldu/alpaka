@@ -239,6 +239,7 @@ namespace alpaka
             using type = alpaka::AccCpuSerial<TDim, TIdx>;
         };
     } // namespace trait
+
 } // namespace alpaka
 
 #endif

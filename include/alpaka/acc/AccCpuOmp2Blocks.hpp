@@ -247,6 +247,7 @@ namespace alpaka
             using type = alpaka::AccCpuOmp2Blocks<TDim, TIdx>;
         };
     } // namespace trait
+
 } // namespace alpaka
 
 #endif
