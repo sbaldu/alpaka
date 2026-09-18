@@ -205,10 +205,7 @@ namespace alpaka::trait
             std::size_t const bytes = static_cast<std::size_t>(getExtentProduct(extent)) * sizeof(TElem);
             void* const memPtr = allocator.allocate(bytes, alignof(TElem));
             auto deleter = [l_queue = std::move(queue), alloc = std::move(allocator)](TElem* ptr) mutable
-            {
-                alpaka::wait(l_queue);
-                alloc.deallocate(ptr);
-            };
+            { alpaka::enqueue(l_queue, [ptr, alloc]() mutable { alloc.deallocate(ptr); }); };
             return BufCpu<TElem, TDim, TIdx>(dev, static_cast<TElem*>(memPtr), std::move(deleter), extent);
         }
     };
