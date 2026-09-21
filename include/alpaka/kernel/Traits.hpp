@@ -280,17 +280,16 @@ namespace alpaka
             static_assert(isKernelArgumentTriviallyCopyable<T>, "The kernel argument T must be trivially copyable!");
         }
 
-        template<typename TAcc, typename TSfinae = void>
-        struct CheckFnReturnType
+        //! Checks that the kernel function object is invocable with exactly the argument types and value
+        //! categories (lvalue, const lvalue, rvalue, ...) it is actually going to be invoked with, and that the
+        //! call returns void.
+        template<typename TKernelFnObj, typename TAcc, typename... TArgs>
+        ALPAKA_FN_HOST_ACC auto checkKernelReturnType(TKernelFnObj const&, TAcc const&, TArgs&&...) -> void
         {
-            template<typename TKernelFnObj, typename... TArgs>
-            void operator()(TKernelFnObj const&, TArgs&&...)
-            {
-                static_assert(
-                    std::is_invocable_r_v<void, TKernelFnObj, TAcc const&, TArgs&&...>,
-                    "The kernel is not invocable with the given arguments!");
-            }
-        };
+            static_assert(
+                std::is_invocable_r_v<void, TKernelFnObj const&, TAcc const&, TArgs&&...>,
+                "The kernel is not invocable with the given arguments!");
+        }
     } // namespace detail
 
     //! Check if the kernel type is trivially copyable
@@ -377,7 +376,6 @@ namespace alpaka
     ALPAKA_FN_HOST auto exec(TQueue& queue, TWorkDiv const& workDiv, TKernelFnObj const& kernelFnObj, TArgs&&... args)
         -> void
     {
-        detail::CheckFnReturnType<TAcc>{}(kernelFnObj, std::forward<TArgs>(args)...);
         enqueue(queue, createTaskKernel<TAcc>(workDiv, kernelFnObj, std::forward<TArgs>(args)...));
     }
 
@@ -401,7 +399,6 @@ namespace alpaka
         -> void
     {
         using Acc = TagToAcc<TTag, Dim<std::decay_t<TWorkDiv>>, Idx<std::decay_t<TWorkDiv>>>;
-        detail::CheckFnReturnType<Acc>{}(kernelFnObj, std::forward<TArgs>(args)...);
         enqueue(queue, createTaskKernel<Acc>(workDiv, kernelFnObj, std::forward<TArgs>(args)...));
     }
 

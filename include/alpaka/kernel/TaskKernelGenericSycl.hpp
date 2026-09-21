@@ -45,7 +45,11 @@
             {                                                                                                         \
                 auto acc = TAcc{item_elements, work_item, dyn_shared_accessor, st_shared_accessor};                   \
                 std::apply(                                                                                           \
-                    [k_func, &acc](typename std::decay_t<TArgs> const&... args) { k_func(acc, args...); },            \
+                    [k_func, &acc](typename std::decay_t<TArgs> const&... args)                                       \
+                    {                                                                                                 \
+                        detail::checkKernelReturnType(k_func, acc, args...);                                          \
+                        k_func(acc, args...);                                                                         \
+                    },                                                                                                \
                     k_args);                                                                                          \
             });
 
@@ -57,7 +61,11 @@
             {                                                                                                         \
                 auto acc = TAcc{item_elements, work_item, dyn_shared_accessor, st_shared_accessor};                   \
                 std::apply(                                                                                           \
-                    [k_func, &acc](typename std::decay_t<TArgs> const&... args) { k_func(acc, args...); },            \
+                    [k_func, &acc](typename std::decay_t<TArgs> const&... args)                                       \
+                    {                                                                                                 \
+                        detail::checkKernelReturnType(k_func, acc, args...);                                          \
+                        k_func(acc, args...);                                                                         \
+                    },                                                                                                \
                     k_args);                                                                                          \
             });
 
