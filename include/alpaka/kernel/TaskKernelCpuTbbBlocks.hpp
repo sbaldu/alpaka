@@ -99,14 +99,13 @@ namespace alpaka
                                 = mapIdx<TDim::value>(Vec<DimInt<1u>, TIdx>(static_cast<TIdx>(i)), gridBlockExtent);
 
                             std::apply(
-                                [&](auto&&... argsWithAcc)
-                                {
+                                [&](auto&&... argsWithAcc) {
                                     detail::checkKernelReturnType(
                                         m_kernelFnObj,
                                         std::forward<decltype(argsWithAcc)>(argsWithAcc)...);
-                                    m_kernelFnObj(std::forward<decltype(argsWithAcc)>(argsWithAcc)...);
                                 },
                                 std::tuple_cat(std::tie(acc), m_args));
+                            std::apply(m_kernelFnObj, std::tuple_cat(std::tie(acc), m_args));
 
                             freeSharedVars(acc);
                         });

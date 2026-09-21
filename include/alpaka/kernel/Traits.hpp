@@ -280,9 +280,6 @@ namespace alpaka
             static_assert(isKernelArgumentTriviallyCopyable<T>, "The kernel argument T must be trivially copyable!");
         }
 
-        //! Checks that the kernel function object is invocable with exactly the argument types and value
-        //! categories (lvalue, const lvalue, rvalue, ...) it is actually going to be invoked with, and that the
-        //! call returns void.
         template<typename TKernelFnObj, typename TAcc, typename... TArgs>
         ALPAKA_FN_HOST_ACC auto checkKernelReturnType(TKernelFnObj const&, TAcc const&, TArgs&&...) -> void
         {
